@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b0b0f" />
+  <title>ShortsClipper — turn long videos into scroll-stopping shorts</title>
+  <meta name="description" content="Paste a YouTube URL, get scored vertical clips with animated captions, B-roll and one-click downloads." />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="ShortsClipper home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M7 4 17 20M17 4 7 20" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="5.5" cy="3.8" r="2.2" stroke="currentColor" stroke-width="2"/><circle cx="18.5" cy="3.8" r="2.2" stroke="currentColor" stroke-width="2"/></svg>
+      </span>
+      <span>Shorts<span class="brand-accent">Clipper</span></span>
+    </a>
+    <div class="topbar-right">
+      <span class="status-dot" id="healthDot" title="Checking services…"></span>
+      <span class="topbar-meta" id="healthText">checking services…</span>
+      <button class="ghost-btn" id="recentToggle" type="button">History</button>
+    </div>
+  </header>
+
+  <div class="shell">
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">AI SHORTS STUDIO</p>
+          <h1>One long video.<br /><span class="grad">A week of shorts.</span></h1>
+          <p class="lede">Paste a YouTube link. ShortsClipper finds the strongest hooks, cuts the dead air, reframes on the speaker, and burns animated captions — ready to post.</p>
+          <div class="tip-chips" aria-label="Editing rules applied automatically">
+            <span>Hook in 3s</span>
+            <span>1–2 word captions</span>
+            <span>Cut every 3–4s</span>
+            <span>−14 LUFS audio</span>
+            <span>Safe-zone captions</span>
+          </div>
+        </div>
+        <div class="hero-card">
+          <div class="mini-frame" aria-hidden="true">
+            <div class="mini-person"></div>
+            <div class="mini-caption"><b>Nobody</b> tells you this</div>
+            <div class="mini-ui"></div>
+          </div>
+          <div class="hero-stat">
+            <strong>13.5M</strong>
+            <span>clips studied by the rules baked into this app</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="workspace">
+        <section class="panel form-panel" aria-labelledby="createTitle">
+          <div class="panel-head">
+            <div>
+              <p class="kicker">01 · Source</p>
+              <h2 id="createTitle">Create clips</h2>
+            </div>
+            <button class="link-btn" id="resetSettings" type="button">Reset settings</button>
+          </div>
+
+          <form id="clipForm" novalidate>
+            <label class="field">
+              <span class="field-label">YouTube URLs <em>one per line for batch mode</em></span>
+              <textarea id="urls" rows="3" placeholder="https://www.youtube.com/watch?v=…" spellcheck="false" required></textarea>
+            </label>
+
+            <div class="grid-2">
+              <label class="field">
+                <span class="field-label">Clips <output id="clipCountOut">5</output></span>
+                <input id="clipCount" type="range" min="1" max="12" step="1" value="5" />
+              </label>
+              <label class="field">
+                <span class="field-label">Aspect</span>
+                <select id="aspect">
+                  <option value="9:16" selected>9:16 · Shorts</option>
+                  <option value="16:9">16:9 · landscape</option>
+                  <option value="1:1">1:1 · square</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="grid-2">
+              <label class="field">
+                <span class="field-label">Min length <output id="minLenOut">20s</output></span>
+                <input id="minLen" type="range" min="8" max="60" step="1" value="20" />
+              </label>
+              <label class="field">
+                <span class="field-label">Max length <output id="maxLenOut">60s</output></span>
+                <input id="maxLen" type="range" min="15" max="90" step="1" value="60" />
+              </label>
+            </div>
+
+            <details class="settings-block" open>
+              <summary><span>Captions</span><small>always burned in · editable after render</small></summary>
+              <div class="preset-grid" id="presetGrid" role="radiogroup" aria-label="Caption preset"></div>
+              <div class="grid-2">
+                <label class="field">
+                  <span class="field-label">Font <em>auto = Thai-safe</em></span>
+                  <input id="captionFont" type="text" placeholder="Auto" maxlength="60" />
+                </label>
+                <label class="field">
+                  <span class="field-label">Size <output id="captionSizeOut">82</output></span>
+                  <input id="captionSize" type="range" min="48" max="140" step="2" value="82" />
+                </label>
+              </div>
+              <div class="grid-2">
+                <label class="field color-field">
+                  <span class="field-label">Text</span>
+                  <span class="color-row"><input id="captionColor" type="color" value="#ffffff" /><code id="captionColorHex">#FFFFFF</code></span>
+                </label>
+                <label class="field color-field">
+                  <span class="field-label">Highlight</span>
+                  <span class="color-row"><input id="highlightColor" type="color" value="#ffe14d" /><code id="highlightColorHex">#FFE14D</code></span>
+                </label>
+              </div>
+              <div class="grid-2">
+                <label class="field">
+                  <span class="field-label">Position <output id="captionPositionOut">24%</output></span>
+                  <input id="captionPosition" type="range" min="16" max="38" step="1" value="24" />
+                </label>
+                <label class="field">
+                  <span class="field-label">Words per beat</span>
+                  <select id="captionMaxWords">
+                    <option value="1">1</option>
+                    <option value="2" selected>2</option>
+                  </select>
+                </label>
+              </div>
+              <div class="grid-2">
+                <label class="field">
+                  <span class="field-label">Translate captions</span>
+                  <select id="translateTo">
+                    <option value="">Off</option>
+                    <option value="en">English</option>
+                    <option value="th">Thai</option>
+                    <option value="es">Spanish</option>
+                    <option value="ja">Japanese</option>
+                    <option value="ko">Korean</option>
+                    <option value="zh">Chinese</option>
+                    <option value="vi">Vietnamese</option>
+                    <option value="id">Indonesian</option>
+                    <option value="pt-BR">Portuguese (BR)</option>
+                  </select>
+                </label>
+                <label class="check">
+                  <input id="bilingual" type="checkbox" checked />
+                  <span>Show both languages</span>
+                </label>
+              </div>
+              <div class="toggle-row">
+                <label class="check"><input id="captionsEnabled" type="checkbox" checked /><span>Burn in captions</span></label>
+                <label class="check"><input id="uppercase" type="checkbox" checked /><span>Uppercase</span></label>
+              </div>
+            </details>
+
+            <details class="settings-block">
+              <summary><span>Pacing &amp; reframe</span><small>silence removal · jump-cut zooms</small></summary>
+              <div class="toggle-row">
+                <label class="check"><input id="silenceRemoval" type="checkbox" checked /><span>Remove pauses &gt; 0.4s</span></label>
+                <label class="check"><input id="removeFillers" type="checkbox" checked /><span>Remove fillers</span></label>
+              </div>
+              <div class="toggle-row">
+                <label class="check"><input id="zoomCuts" type="checkbox" checked /><span>Subtle zoom every 3–4s</span></label>
+                <label class="check"><input id="keyPoint" type="checkbox" checked /><span>Key-point overlay</span></label>
+              </div>
+              <div class="grid-2">
+                <label class="field">
+                  <span class="field-label">Reframe</span>
+                  <select id="reframe">
+                    <option value="auto" selected>Auto — face, else blurred fit</option>
+                    <option value="face">Face track (center if none)</option>
+                    <option value="center">Center crop</option>
+                    <option value="blur">Blurred background</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span class="field-label">Color grade</span>
+                  <select id="colorGrade">
+                    <option value="punch" selected>Punch · contrast + color</option>
+                    <option value="cinematic">Cinematic · warm &amp; moody</option>
+                    <option value="neon">Neon · purple / blue pop</option>
+                    <option value="none">None</option>
+                  </select>
+                </label>
+              </div>
+              <div class="grid-2">
+                <label class="field">
+                  <span class="field-label">Zoom interval <output id="zoomIntervalOut">2.5s</output></span>
+                  <input id="zoomInterval" type="range" min="2" max="8" step="0.5" value="2.5" />
+                </label>
+                <label class="field">
+                  <span class="field-label">Zoom amount <output id="zoomAmountOut">15%</output></span>
+                  <input id="zoomAmount" type="range" min="0" max="30" step="1" value="15" />
+                </label>
+              </div>
+            </details>
+
+            <details class="settings-block">
+              <summary><span>Audio &amp; B-roll</span><small>clean sound first · Pexels cutaways</small></summary>
+              <div class="toggle-row">
+                <label class="check"><input id="denoise" type="checkbox" checked /><span>Denoise</span></label>
+                <label class="check"><input id="loudnorm" type="checkbox" checked /><span>Normalize −14 LUFS</span></label>
+              </div>
+              <div class="toggle-row">
+                <label class="check"><input id="broll" type="checkbox" /><span>B-roll from Pexels</span></label>
+                <label class="field compact">
+                  <span class="field-label">Max cutaways</span>
+                  <select id="brollMax"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select>
+                </label>
+              </div>
+              <div class="music-box">
+                <div class="music-head">
+                  <span class="field-label">Background music <em>off by default</em></span>
+                  <label class="upload-btn">Upload<input id="musicInput" type="file" accept="audio/*" hidden /></label>
+                </div>
+                <div class="music-current" id="musicCurrent">No track selected</div>
+                <label class="field">
+                  <span class="field-label">Music level <output id="musicVolumeOut">14%</output></span>
+                  <input id="musicVolume" type="range" min="0" max="50" step="1" value="14" />
+                </label>
+              </div>
+            </details>
+
+            <details class="settings-block">
+              <summary><span>Structure &amp; exports</span><small>CTA · loop · A/B hooks</small></summary>
+              <div class="toggle-row">
+                <label class="check"><input id="outroEnabled" type="checkbox" checked /><span>CTA outro</span></label>
+                <label class="check"><input id="loopEnding" type="checkbox" /><span>Loop ending</span></label>
+              </div>
+              <label class="field">
+                <span class="field-label">Outro text</span>
+                <input id="outroText" type="text" maxlength="60" value="Follow for part 2" />
+              </label>
+              <label class="check"><input id="abVariants" type="checkbox" /><span>Export 2 extra hook variants (A/B test)</span></label>
+            </details>
+
+            <button class="primary-btn" id="analyzeBtn" type="submit">
+              <span class="btn-label">Find my best clips</span>
+              <span class="btn-arrow" aria-hidden="true">→</span>
+            </button>
+            <p class="fine-print">Analysis can take a few minutes for long videos. You review scores before anything renders.</p>
+          </form>
+        </section>
+
+        <section class="panel preview-panel" aria-labelledby="previewTitle">
+          <div class="panel-head">
+            <div>
+              <p class="kicker">02 · Look</p>
+              <h2 id="previewTitle">Caption preview</h2>
+            </div>
+            <span class="live-pill"><i></i> Live</span>
+          </div>
+          <div class="preview-stage">
+            <div class="phone-frame" id="phoneFrame">
+              <div class="phone-video" aria-hidden="true">
+                <div class="glow g1"></div><div class="glow g2"></div>
+                <div class="silhouette"><span class="head"></span><span class="body"></span></div>
+              </div>
+              <div class="safe-zone" aria-hidden="true"><span>bottom 15% · platform UI</span></div>
+              <div class="platform-top" aria-hidden="true"><span>Following</span><span>For you</span></div>
+              <div class="platform-ui" aria-hidden="true">
+                <div class="ui-lines"><b>@yourhandle</b><span>Hook, payoff, caption. #Shorts</span></div>
+                <div class="ui-icons"><i>♡</i><i>💬</i><i>↗</i></div>
+              </div>
+              <div class="caption-preview" id="captionPreview" aria-live="polite"></div>
+            </div>
+            <div class="preview-meta">
+              <div class="preview-preset" id="previewPresetName">Bold Pop</div>
+              <p id="previewPresetDesc">Chunky bold sans, white with a dark outline, yellow spoken word, quick pop-in.</p>
+              <div class="safe-check"><span class="check-icon">✓</span> Text stays above the bottom 15% safe area</div>
+              <div class="preview-swatches">
+                <span class="swatch" id="swatchText"></span>
+                <span class="swatch" id="swatchHighlight"></span>
+                <span class="swatch" id="swatchBox"></span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel progress-panel" id="progressPanel" hidden aria-live="polite">
+        <div class="progress-head">
+          <div>
+            <p class="kicker">Working</p>
+            <h2 id="progressTitle">Starting…</h2>
+          </div>
+          <span class="progress-pct" id="progressPct">0%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="source-list" id="sourceList"></div>
+        <div class="log" id="logList"></div>
+        <div class="error-box" id="jobError" hidden></div>
+      </section>
+
+      <section class="panel candidates-panel" id="candidatesPanel" hidden>
+        <div class="panel-head">
+          <div>
+            <p class="kicker">03 · Choose</p>
+            <h2>Scored candidates</h2>
+            <p class="subhead" id="candidateSubhead"></p>
+          </div>
+          <div class="head-actions">
+            <button class="ghost-btn" id="selectAll" type="button">Select all</button>
+            <button class="primary-btn small" id="renderBtn" type="button">Render selected <span id="renderCount">(0)</span></button>
+          </div>
+        </div>
+        <div class="candidate-grid" id="candidateGrid"></div>
+      </section>
+
+      <section class="panel results-panel" id="resultsPanel" hidden>
+        <div class="panel-head">
+          <div>
+            <p class="kicker">04 · Post</p>
+            <h2>Your shorts</h2>
+            <p class="subhead" id="resultsSubhead"></p>
+          </div>
+          <div class="head-actions">
+            <button class="ghost-btn" id="zipBtn" type="button">Download all as ZIP</button>
+            <button class="ghost-btn" id="cleanupBtn" type="button" title="Delete generated files older than the retention window">Clean up old files</button>
+          </div>
+        </div>
+        <div class="results-grid" id="resultsGrid"></div>
+      </section>
+
+      <section class="panel history-panel" id="historyPanel" hidden>
+        <div class="panel-head">
+          <div><p class="kicker">Library</p><h2>Recent jobs</h2></div>
+          <button class="link-btn" id="closeHistory" type="button">Close</button>
+        </div>
+        <div class="history-list" id="historyList"></div>
+      </section>
+    </main>
+
+    <footer>
+      <p class="disclaimer">Only use videos you own or have permission to use. B-roll is sourced from Pexels and credited in every export.</p>
+      <p class="footer-meta">ShortsClipper · yt-dlp · faster-whisper · ffmpeg · <span id="footerRetention">24h</span> auto-cleanup</p>
+    </footer>
+  </div>
+
+  <dialog id="captionDialog" class="modal">
+    <form method="dialog" class="modal-card" id="captionForm">
+      <div class="modal-head">
+        <div><p class="kicker">Proofread</p><h2>Edit captions</h2></div>
+        <button class="icon-btn" value="cancel" aria-label="Close">×</button>
+      </div>
+      <p class="modal-note">Fix names, homophones and Thai spelling. Re-rendering burns the new text into the clip without re-downloading anything.</p>
+      <div class="caption-editor" id="captionEditor"></div>
+      <div class="modal-actions">
+        <span class="fine-print" id="captionLang"></span>
+        <button class="ghost-btn" value="cancel">Cancel</button>
+        <button class="primary-btn small" id="saveCaptions" value="default">Save &amp; re-render</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="youtubeDialog" class="modal">
+    <form method="dialog" class="modal-card" id="youtubeForm">
+      <div class="modal-head">
+        <div><p class="kicker">Publish</p><h2>Upload to YouTube</h2></div>
+        <button class="icon-btn" value="cancel" aria-label="Close">×</button>
+      </div>
+      <div class="yt-status" id="ytStatus">Checking connection…</div>
+      <label class="field"><span class="field-label">Title <output id="ytTitleCount">0/100</output></span><input id="ytTitle" type="text" maxlength="100" /></label>
+      <label class="field"><span class="field-label">Description <em>#Shorts is added automatically</em></span><textarea id="ytDescription" rows="5"></textarea></label>
+      <div class="modal-note" id="ytMetadata" hidden></div>
+      <label class="field"><span class="field-label">Visibility</span>
+        <select id="ytPrivacy"><option value="unlisted" selected>Unlisted</option><option value="public">Public</option><option value="private">Private</option></select>
+      </label>
+      <label class="field"><span class="field-label">Schedule publish <em>optional — leaves it private until then</em></span><input id="ytSchedule" type="datetime-local" /></label>
+      <label class="check"><input id="ytRights" type="checkbox" /><span>I own this video or have permission to publish it</span></label>
+      <div class="modal-actions">
+        <button class="ghost-btn" value="cancel">Cancel</button>
+        <button class="primary-btn small" id="ytUploadBtn" value="default">Upload</button>
+      </div>
+      <p class="fine-print" id="ytResult"></p>
+    </form>
+  </dialog>
+
+  <div class="toast-stack" id="toasts" aria-live="polite"></div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

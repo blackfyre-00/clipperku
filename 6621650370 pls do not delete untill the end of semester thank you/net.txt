@@ -1,0 +1,2 @@
+https://www.msftconnecttest.com/redirect
+https://login.ku.ac.th/?referer=connectivitycheck.gstatic.com/generate_204
